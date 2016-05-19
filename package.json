@@ -1,0 +1,54 @@
+{
+  "name": "strats",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rm -rf lib && babel src --out-dir lib",
+    "lint": "eslint src",
+    "pretest": "npm run lint",
+    "test": "mocha test",
+    "prepublish": "in-publish && npm run test && npm run build || not-in-publish",
+    "publish:major": "npm version major && npm publish",
+    "publish:minor": "npm version minor && npm publish",
+    "publish:patch": "npm version patch && npm publish",
+    "postpublish": "git push origin master --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azuqua/strats"
+  },
+  "bugs": {
+    "url": "http://github.com/azuqua/strats/issues"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Nicholas Clawson",
+    "email": "nickclaw@gmail.com",
+    "url": "nickclaw.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "lodash": "^4.12.0",
+    "on-finished": "^2.3.0",
+    "standard-deviation-stream": "git+https://github.com/azuqua/standard-deviation-stream.git"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.9.0",
+    "babel-eslint": "^6.0.4",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-1": "^6.5.0",
+    "babel-register": "^6.9.0",
+    "chai": "^3.5.0",
+    "eslint": "^2.10.2",
+    "eslint-config-airbnb": "^9.0.1",
+    "eslint-plugin-import": "^1.8.0",
+    "eslint-plugin-jsx-a11y": "^1.2.1",
+    "eslint-plugin-react": "^5.1.1",
+    "in-publish": "^2.0.0",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.4",
+    "sinon-chai": "^2.8.0"
+  }
+}
