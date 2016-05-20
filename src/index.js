@@ -27,13 +27,13 @@ const defaultSanitize = req => {
     .toLowerCase();
 };
 
-module.exports = ({
+function busybody({
   step = defaultStep,
   window = defaultWindow,
   precision = defaultPrecision,
   filter = defaultFilter,
   sanitize = defaultSanitize,
-} = {}) => {
+} = {}) {
   assert(step >= 0, 'step must be a positive number');
   assert(window > 0, 'window must be a positive non-zero number');
   assert(precision >= 0, 'precision must be a positive number');
@@ -119,4 +119,8 @@ module.exports = ({
   if (step > 0) setInterval(addInterval, step);
 
   return statsMiddleware;
-};
+}
+
+// export busybody and the default sanitize function
+module.exports = busybody;
+busybody.sanitize = defaultSanitize;

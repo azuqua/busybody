@@ -58,19 +58,36 @@ Creates a new tracker. Takes in the following options.
  * `window = 4` - Maximum steps to store.
  * `precision = 2` - Maximum decimals to round to.
  * `filter(req) -> boolean` - Custom function to filter requests.
- * `sanitize(url) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
+ * `sanitize(req) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
+
+#### `busybody.sanitize(req) -> string`
+The builtin sanitization function. It makes the following transformations to `req.originalUrl`.
+ 1. Extract the pathname
+ 2. Normalize the pathname
+ 3. Replaces all numbers with `:id`
+ 4. Replaces all uuids with `:uuid`
+ 5. Makes everythign lowercase.
+
+##### Example
+```
+> /path/../2/something?foo=bar
+/:id/something/
+
+> /foo/BAR/21/123e4567-e89b-12d3-a456-426655440000
+/foo/bar/:id/:uuid/
+```
 
 #### `tracker(req, res, next)`
 Express middleware that should be placed
 above routes you want to keep stats about.
 
-#### `tracker.getStats(sortBy = 'mean') -> object`
+#### `tracker.getStats(sort = 'mean') -> object`
 Returns the stats output.
+
+The `sort` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max`.
 
 #### Events
 The middleware returned by busybody is also an [`EventEmitter`]() that exposes
 the following events:
  * `step`
  * `expire`
-
-The `sortBy` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max`.
