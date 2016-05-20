@@ -6,6 +6,8 @@ import SDStream from 'standard-deviation-stream';
 import createDebug from 'debug';
 import round from 'lodash/round';
 import map from 'lodash/map';
+import mixin from 'merge-descriptors';
+import { EventEmitter } from 'events';
 
 const UUID = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//g;
 const ID = /\/\d+\//g;
@@ -47,18 +49,44 @@ module.exports = ({
     return round(ms, precision);
   }
 
+  // the middleware function to track stats
+  function statsMiddleware(req, res, next) {
+    if (!filter(req)) {
+      return next();
+    }
+
+    const key = sanitize(req);
+    const start = process.hrtime();
+
+    // listen for response
+    onFinished(res, () => {
+      intervals.forEach(interval => {
+        if (!interval.streams[key]) interval.streams[key] = new SDStream();
+        interval.streams[key].push(diff(start));
+      });
+    });
+
+    return next();
+  }
+
   // adds a new interval
   function addInterval() {
     debug('adding new interval');
-    const len = intervals.push({
+    const newStep = {
       since: (new Date()).toISOString(),
       streams: {},
-    });
+    };
+    let oldStep = null;
+
+    const len = intervals.push(newStep);
 
     if (len > window) {
       debug('removing expired interval');
-      intervals.shift();
+      oldStep = intervals.shift();
     }
+
+    statsMiddleware.emit('step', newStep);
+    if (oldStep) statsMiddleware.emit('expire', oldStep);
   }
 
   // returns the formatted stats of the oldest interval
@@ -80,33 +108,15 @@ module.exports = ({
     return { since, routes };
   }
 
-  // the middleware function to track stats
-  function statsMiddleware(req, res, next) {
-    if (!filter(req)) {
-      return next();
-    }
-
-    const key = sanitize(req);
-    const start = process.hrtime();
-
-    // listen for response
-    onFinished(res, () => {
-      intervals.forEach(interval => {
-        if (!interval.streams[key]) interval.streams[key] = new SDStream();
-        interval.streams[key].push(diff(start));
-      });
-    });
-
-    return next();
-  }
+  // expose some properties/event emitter
+  statsMiddleware.intervals = intervals;
+  statsMiddleware.addInterval = addInterval;
+  statsMiddleware.getStats = getStats;
+  mixin(statsMiddleware, EventEmitter.prototype, false);
 
   // start timing
   addInterval();
   if (step > 0) setInterval(addInterval, step);
 
-  // expose some properties and return middleware
-  statsMiddleware.intervals = intervals;
-  statsMiddleware.addInterval = addInterval;
-  statsMiddleware.getStats = getStats;
   return statsMiddleware;
 };

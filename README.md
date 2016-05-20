@@ -67,4 +67,10 @@ above routes you want to keep stats about.
 #### `tracker.getStats(sortBy = 'mean') -> object`
 Returns the stats output.
 
+#### Events
+The middleware returned by busybody is also an [`EventEmitter`]() that exposes
+the following events:
+ * `step`
+ * `expire`
+
 The `sortBy` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max`.
