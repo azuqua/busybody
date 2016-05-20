@@ -1,16 +1,16 @@
-# strats
+# busybody
 
-> stats. routes. strats?
+Your friendly neighborhood request tracker?
 
 ### Example
 
 #### Setup
 ```js
 import express from 'express';
-import strats from 'strats';
+import busybody from 'busybody';
 
 const app = express();
-const tracker = strats();
+const tracker = busybody();
 
 app.use(tracker);
 
@@ -52,10 +52,13 @@ app.listen(8080, () => console.log('Server listening'));
 
 ### API
 
-#### `strats(options) -> tracker`
+#### `busybody(options) -> tracker`
 Creates a new tracker. Takes in the following options.
- * `step` - _integer_. Time between steps in milliseconds.
- * `window` - _integer_. Maximum steps to store.
+ * `step=21600000` - Time between steps in milliseconds. Defaults to 6 hours.
+ * `window = 4` - Maximum steps to store.
+ * `precision = 2` - Maximum decimals to round to.
+ * `filter(req) -> boolean` - Custom function to filter requests.
+ * `sanitize(url) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
 
 #### `tracker(req, res, next)`
 Express middleware that should be placed

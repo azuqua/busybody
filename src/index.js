@@ -10,7 +10,7 @@ import map from 'lodash/map';
 const UUID = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//g;
 const ID = /\/\d+\//g;
 
-const debug = createDebug('strats');
+const debug = createDebug('busybody');
 const defaultStep = createDebug.humanize('6 hours');
 const defaultWindow = 4;
 const defaultPrecision = 2;

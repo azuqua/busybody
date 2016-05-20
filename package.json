@@ -1,5 +1,5 @@
 {
-  "name": "strats",
+  "name": "busybody",
   "version": "0.1.0",
   "description": "",
   "main": "lib/index.js",
@@ -16,10 +16,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/azuqua/strats"
+    "url": "https://github.com/azuqua/busybody"
   },
   "bugs": {
-    "url": "http://github.com/azuqua/strats/issues"
+    "url": "http://github.com/azuqua/busybody/issues"
   },
   "keywords": [],
   "author": {
