@@ -2,30 +2,50 @@ import url from 'url';
 import path from 'path';
 import assert from 'assert';
 import onFinished from 'on-finished';
-import DeviationStream from 'standard-deviation-stream';
+import SDStream from 'standard-deviation-stream';
 import createDebug from 'debug';
 import round from 'lodash/round';
 import map from 'lodash/map';
 
-const debug = createDebug('designer:util:stats');
+const UUID = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//g;
+const ID = /\/\d+\//g;
+
+const debug = createDebug('strats');
 const defaultStep = createDebug.humanize('6 hours');
 const defaultWindow = 4;
+const defaultPrecision = 2;
+const defaultFilter = () => true;
+const defaultSanitize = req => {
+  const { pathname } = url.parse(req.originalUrl);
 
-function diff(start) {
-  const hr = process.hrtime(start);
-  const ms = hr[0] * 1e3 + hr[1] / 1e6;
-  return round(ms, 2);
-}
+  // attempt to normalize/sanitize common url patterns
+  return path.normalize(`${pathname}/./`) // makes a url like /path/to/
+    .replace(UUID, '/:uuid/')
+    .replace(ID, '/:id/')
+    .toLowerCase();
+};
 
 module.exports = ({
   step = defaultStep,
-  _window = defaultWindow,
+  window = defaultWindow,
+  precision = defaultPrecision,
+  filter = defaultFilter,
+  sanitize = defaultSanitize,
 } = {}) => {
-  const window = Math.floor(_window);
   assert(step >= 0, 'step must be a positive number');
-  assert(window > 0, 'window must be a positive and non-zero number');
+  assert(window > 0, 'window must be a positive non-zero number');
+  assert(precision >= 0, 'precision must be a positive number');
+  assert(typeof filter === 'function', 'filter must be a function');
+  assert(typeof sanitize === 'function', 'filter must be a function');
 
   const intervals = [];
+
+  // calcs time from start in ms
+  function diff(start) {
+    const hr = process.hrtime(start);
+    const ms = hr[0] * 1e3 + hr[1] / 1e6;
+    return round(ms, precision);
+  }
 
   // adds a new interval
   function addInterval() {
@@ -48,49 +68,43 @@ module.exports = ({
 
     const routes = map(streams, (stream, key) => ({
       route: key,
-      count: round(stream.count(), 2),
-      mean: round(stream.mean(), 2),
-      standardDeviation: round(stream.standardDeviation(), 2),
-      min: round(stream.min(), 2),
-      max: round(stream.max(), 2),
+      count: stream.count(),
+      mean: round(stream.mean(), precision),
+      standardDeviation: round(stream.standardDeviation(), precision),
+      min: round(stream.min(), precision),
+      max: round(stream.max(), precision),
     }));
 
     // sort in-place
     routes.sort((a, b) => b[sort] - a[sort]);
-
     return { since, routes };
   }
 
   // the middleware function to track stats
   function statsMiddleware(req, res, next) {
-    // normalize pathname
-    const { pathname } = url.parse(req.originalUrl);
+    if (!filter(req)) {
+      return next();
+    }
 
-    // attempt to sanitize common url patterns
-    const key = path.normalize(`${pathname}/.`)
-      .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, '/:uuid')
-      .replace(/\/\d+/g, '/:id')
-      .toLowerCase();
-
-    // record start time
+    const key = sanitize(req);
     const start = process.hrtime();
 
     // listen for response
     onFinished(res, () => {
       intervals.forEach(interval => {
-        if (!interval.streams[key]) interval.streams[key] = new DeviationStream();
+        if (!interval.streams[key]) interval.streams[key] = new SDStream();
         interval.streams[key].push(diff(start));
       });
     });
 
-    next();
+    return next();
   }
-
 
   // start timing
   addInterval();
   if (step > 0) setInterval(addInterval, step);
 
+  // expose some properties and return middleware
   statsMiddleware.intervals = intervals;
   statsMiddleware.addInterval = addInterval;
   statsMiddleware.getStats = getStats;
