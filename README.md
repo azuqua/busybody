@@ -57,10 +57,11 @@ Creates a new tracker. Takes in the following options.
  * `step=21600000` - Time between steps in milliseconds. Defaults to 6 hours.
  * `window = 4` - Maximum steps to store.
  * `precision = 2` - Maximum decimals to round to.
- * `filter(req) -> boolean` - Custom function to filter requests.
- * `sanitize(req) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
+ * `preFilter(req, res) -> boolean` - Custom function to filter tracked requests before they're handled.
+ * `postFilter(err, req, res) -> boolean` - Custom function to filter tracked requests after they're handled.
+ * `sanitize(req, res) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
 
-#### `busybody.sanitize(req) -> string`
+#### `busybody.sanitize(req, res) -> string`
 The builtin sanitization function. It makes the following transformations to `req.originalUrl`.
  1. Extract the pathname
  2. Normalize the pathname

@@ -16,7 +16,8 @@ const debug = createDebug('busybody');
 const defaultStep = createDebug.humanize('6 hours');
 const defaultWindow = 4;
 const defaultPrecision = 2;
-const defaultFilter = () => true;
+const defaultPreFilter = () => true;
+const defaultPostFilter = () => true;
 const defaultSanitize = req => {
   const { pathname } = url.parse(req.originalUrl);
 
@@ -31,13 +32,15 @@ function busybody({
   step = defaultStep,
   window = defaultWindow,
   precision = defaultPrecision,
-  filter = defaultFilter,
+  preFilter = defaultPreFilter,
+  postFilter = defaultPostFilter,
   sanitize = defaultSanitize,
 } = {}) {
   assert(step >= 0, 'step must be a positive number');
   assert(window > 0, 'window must be a positive non-zero number');
   assert(precision >= 0, 'precision must be a positive number');
-  assert(typeof filter === 'function', 'filter must be a function');
+  assert(typeof preFilter === 'function', 'preFilter must be a function');
+  assert(typeof postFilter === 'function', 'postfilter must be a function');
   assert(typeof sanitize === 'function', 'filter must be a function');
 
   const intervals = [];
@@ -49,24 +52,50 @@ function busybody({
     return round(ms, precision);
   }
 
+  // onFinished listener to record response time
+  function recordTime(err, res) {
+    if (!res.req.busybody || !postFilter(err, res.req, res)) {
+      return;
+    }
+
+    const key = sanitize(res.req, res);
+    const start = res.req.busybody;
+
+    intervals.forEach(interval => {
+      if (!interval.streams[key]) interval.streams[key] = new SDStream();
+      interval.streams[key].push(diff(start));
+    });
+  }
+
   // the middleware function to track stats
   function statsMiddleware(req, res, next) {
-    if (!filter(req)) {
+    if (req.busybody || !preFilter(req, req)) {
       return next();
     }
 
-    const key = sanitize(req);
-    const start = process.hrtime();
-
-    // listen for response
-    onFinished(res, () => {
-      intervals.forEach(interval => {
-        if (!interval.streams[key]) interval.streams[key] = new SDStream();
-        interval.streams[key].push(diff(start));
-      });
-    });
+    req.busybody = process.hrtime();
+    onFinished(res, recordTime);
 
     return next();
+  }
+
+  // returns the formatted stats of the oldest interval
+  function getStats(sort = 'mean') {
+    debug('calculating stats');
+    const { since, streams } = intervals[0];
+
+    const routes = map(streams, (stream, key) => ({
+      route: key,
+      count: stream.count(),
+      mean: round(stream.mean(), precision),
+      standardDeviation: round(stream.standardDeviation(), precision),
+      min: round(stream.min(), precision),
+      max: round(stream.max(), precision),
+    }));
+
+    // sort in-place
+    routes.sort((a, b) => b[sort] - a[sort]);
+    return { since, routes };
   }
 
   // adds a new interval
@@ -87,25 +116,6 @@ function busybody({
 
     statsMiddleware.emit('step', newStep);
     if (oldStep) statsMiddleware.emit('expire', oldStep);
-  }
-
-  // returns the formatted stats of the oldest interval
-  function getStats(sort = 'mean') {
-    debug('calculating stats');
-    const { since, streams } = intervals[0];
-
-    const routes = map(streams, (stream, key) => ({
-      route: key,
-      count: stream.count(),
-      mean: round(stream.mean(), precision),
-      standardDeviation: round(stream.standardDeviation(), precision),
-      min: round(stream.min(), precision),
-      max: round(stream.max(), precision),
-    }));
-
-    // sort in-place
-    routes.sort((a, b) => b[sort] - a[sort]);
-    return { since, routes };
   }
 
   // expose some properties/event emitter
