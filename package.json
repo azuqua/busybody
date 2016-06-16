@@ -1,7 +1,7 @@
 {
   "name": "busybody",
   "version": "0.5.0",
-  "description": "",
+  "description": "Measure express routes speed over time.",
   "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
@@ -21,7 +21,18 @@
   "bugs": {
     "url": "http://github.com/azuqua/busybody/issues"
   },
-  "keywords": [],
+  "keywords": [
+    "express",
+    "routes",
+    "performance",
+    "stats",
+    "average",
+    "standard deviation",
+    "min",
+    "max",
+    "route",
+    "speed"
+  ],
   "author": {
     "name": "Nicholas Clawson",
     "email": "nickclaw@gmail.com",
