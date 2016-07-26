@@ -6,6 +6,7 @@ import SDStream from 'standard-deviation-stream';
 import createDebug from 'debug';
 import round from 'lodash/round';
 import map from 'lodash/map';
+import head from 'lodash/head';
 import mixin from 'merge-descriptors';
 import { EventEmitter } from 'events';
 
@@ -107,17 +108,15 @@ function busybody({
       since: (new Date()).toISOString(),
       streams: {},
     };
-    let oldStep = null;
 
-    const len = intervals.push(newStep);
-
-    if (len > window) {
+    if (intervals.length >= window) {
       debug('removing expired interval');
-      oldStep = intervals.shift();
+      statsMiddleware.emit('expire', head(intervals));
+      intervals.shift();
     }
 
+    intervals.push(newStep);
     statsMiddleware.emit('step', newStep);
-    if (oldStep) statsMiddleware.emit('expire', oldStep);
   }
 
   // expose some properties/event emitter

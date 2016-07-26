@@ -92,5 +92,5 @@ The `sort` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max
 #### Events
 The middleware returned by busybody is also an [`EventEmitter`](https://nodejs.org/api/events.html#events_class_eventemitter) that exposes
 the following events:
- * `step` - emitted when a new step is created. Passed a new instance of [standard-deviation-stream](https://github.com/nathanpeck/standard-deviation-stream)
- * `expire` - emitted when a step is destroyed. Passed the removed instance of [standard-deviation-stream](https://github.com/nathanpeck/standard-deviation-stream)
+ * `expire` - emitted when a step is about to expire. Passed the expiring step.
+ * `step` - emitted after a new step was created. Passed the new step.
