@@ -60,6 +60,8 @@ Creates a new tracker. Takes in the following options.
  * `preFilter(req, res) -> boolean` - Custom function to filter tracked requests before they're handled.
  * `postFilter(err, req, res) -> boolean` - Custom function to filter tracked requests after they're handled.
  * `sanitize(req, res) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
+ * `onStep(step)` - shortcut for `tracker.on('step', fn)` (see [Events](#events))
+ * `onExpire(step)` - shortcut for `tracker.on('expire', fn)` (see [Events](#events))
 
 #### `busybody.sanitize(req, res) -> string`
 The default sanitization function. It makes the following transformations to `req.originalUrl`.

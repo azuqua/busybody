@@ -35,6 +35,8 @@ function busybody({
   preFilter = defaultPreFilter,
   postFilter = defaultPostFilter,
   sanitize = defaultSanitize,
+  onStep = null,
+  onExpire = null,
 } = {}) {
   assert(step >= 0, 'step must be a positive number');
   assert(window > 0, 'window must be a positive non-zero number');
@@ -123,6 +125,9 @@ function busybody({
   statsMiddleware.addInterval = addInterval;
   statsMiddleware.getStats = getStats;
   mixin(statsMiddleware, EventEmitter.prototype, false);
+
+  if (typeof onStep === 'function') statsMiddleware.on('step', onStep);
+  if (typeof onExpire === 'function') statsMiddleware.on('expire', onExpire);
 
   // start timing
   addInterval();
