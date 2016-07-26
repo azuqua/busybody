@@ -62,12 +62,12 @@ Creates a new tracker. Takes in the following options.
  * `sanitize(req, res) -> string` - Custom function to sanitize a url. By default, removes querystring, ids, uuids, and casing.
 
 #### `busybody.sanitize(req, res) -> string`
-The builtin sanitization function. It makes the following transformations to `req.originalUrl`.
- 1. Extract the pathname
- 2. Normalize the pathname
- 3. Replaces all numbers with `:id`
- 4. Replaces all uuids with `:uuid`
- 5. Makes everythign lowercase.
+The default sanitization function. It makes the following transformations to `req.originalUrl`.
+ 1. Extract the pathname.
+ 2. Normalize the pathname.
+ 3. Replace all numbers with `:id`.
+ 4. Replace all uuids with `:uuid`.
+ 5. Make everything lowercase.
 
 ##### Example
 ```
@@ -88,7 +88,7 @@ Returns the stats output.
 The `sort` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max`.
 
 #### Events
-The middleware returned by busybody is also an [`EventEmitter`]() that exposes
+The middleware returned by busybody is also an [`EventEmitter`](https://nodejs.org/api/events.html#events_class_eventemitter) that exposes
 the following events:
- * `step`
- * `expire`
+ * `step` - emitted when a new step is created. Passed a new instance of [standard-deviation-stream](https://github.com/nathanpeck/standard-deviation-stream)
+ * `expire` - emitted when a step is destroyed. Passed the removed instance of [standard-deviation-stream](https://github.com/nathanpeck/standard-deviation-stream)
