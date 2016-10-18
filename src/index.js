@@ -10,8 +10,8 @@ import head from 'lodash/head';
 import mixin from 'merge-descriptors';
 import { EventEmitter } from 'events';
 
-const UUID = /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//g;
-const ID = /\/\d+\//g;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const ID = /^\d+$/;
 
 const debug = createDebug('busybody');
 const defaultStep = createDebug.humanize('6 hours');
@@ -20,13 +20,21 @@ const defaultPrecision = 2;
 const defaultPreFilter = () => true;
 const defaultPostFilter = () => true;
 const defaultSanitize = req => {
-  const { pathname } = url.parse(req.originalUrl);
+  // get normalized pathname
+  let { pathname } = url.parse(req.originalUrl);
+  pathname = pathname || '/';
+  pathname = pathname.toLowerCase();
+  pathname = path.normalize(`${pathname}/./`);
 
-  // attempt to normalize/sanitize common url patterns
-  return path.normalize(`${pathname}/./`) // makes a url like /path/to/
-    .replace(UUID, '/:uuid/')
-    .replace(ID, '/:id/')
-    .toLowerCase();
+  // sanitize each part of it
+  return pathname
+    .split('/')
+    .map(part => {
+      if (ID.test(part)) return ':id';
+      if (UUID.test(part)) return ':uuid';
+      return part;
+    })
+    .join('/');
 };
 
 function busybody({
