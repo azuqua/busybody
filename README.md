@@ -89,6 +89,9 @@ Returns the stats output.
 
 The `sort` parameter can be `count`, `mean`, `standardDeviation`, `min`, or `max`.
 
+#### `tracker.push(path, ms)`
+Manually track a path and duration.
+
 #### Events
 The middleware returned by busybody is also an [`EventEmitter`](https://nodejs.org/api/events.html#events_class_eventemitter) that exposes
 the following events:

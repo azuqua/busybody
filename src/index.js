@@ -63,6 +63,13 @@ function busybody({
     return round(ms, precision);
   }
 
+  function push(key, ms) {
+    intervals.forEach(interval => {
+      if (!interval.streams[key]) interval.streams[key] = new SDStream();
+      interval.streams[key].push(ms);
+    });
+  }
+
   // onFinished listener to record response time
   function recordTime(err, res) {
     if (!res.req.busybody || !postFilter(err, res.req, res)) {
@@ -71,11 +78,8 @@ function busybody({
 
     const key = sanitize(res.req, res);
     const start = res.req.busybody;
-
-    intervals.forEach(interval => {
-      if (!interval.streams[key]) interval.streams[key] = new SDStream();
-      interval.streams[key].push(diff(start));
-    });
+    const ms = diff(start);
+    push(key, ms);
   }
 
   // the middleware function to track stats
@@ -131,6 +135,7 @@ function busybody({
   statsMiddleware.intervals = intervals;
   statsMiddleware.addInterval = addInterval;
   statsMiddleware.getStats = getStats;
+  statsMiddleware.push = push;
   mixin(statsMiddleware, EventEmitter.prototype, false);
 
   if (typeof onStep === 'function') statsMiddleware.on('step', onStep);
