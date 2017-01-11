@@ -1,5 +1,5 @@
 /**
- * Based off of https://github.com/nathanpeck/standard-deviation-stream
+ * Based off of https:// github.com/nathanpeck/standard-deviation-stream
  *
  * The MIT License (MIT)
  *
@@ -36,21 +36,20 @@ export default class StandardDeviationStream {
     this.valueCount = 0;
   }
 
-  //Push a new value into the stream.
+  // Push a new value into the stream.
   push(incomingNumber) {
     this.valueCount++;
-    if (this.valueCount == 1)
-    {
+    if (this.valueCount === 1) {
       this.oldMean =
       this.newMean =
       this.currentMin =
       this.currentMax = incomingNumber;
       this.oldVariance = 0;
-    }
-    else
-    {
+    } else {
       this.newMean = this.oldMean + (incomingNumber - this.oldMean) / this.valueCount;
-      this.newVariance = this.oldVariance + (incomingNumber - this.oldMean) * (incomingNumber - this.newMean);
+      this.newVariance = this.oldVariance +
+        (incomingNumber - this.oldMean) *
+        (incomingNumber - this.newMean);
       this.oldMean = this.newMean;
       this.oldVariance = this.newVariance;
       this.currentMin = Math.min(this.currentMin, incomingNumber);
@@ -58,7 +57,7 @@ export default class StandardDeviationStream {
     }
   }
 
-  //Clear the stream's state.
+  // Clear the stream's state.
   clear() {
     this.valueCount = 0;
     this.newMean = 0;
@@ -69,32 +68,32 @@ export default class StandardDeviationStream {
     this.currentMax = 0;
   }
 
-  //How many items have we pushed in?
+  // How many items have we pushed in?
   count() {
     return this.valueCount;
   }
 
-  //What is the average of the items we've put in?
+  // What is the average of the items we've put in?
   mean() {
     return (this.valueCount > 0) ? this.newMean : 0;
   }
 
-  //What is the variance of the items?
+  // What is the variance of the items?
   variance() {
     return ((this.valueCount > 1) ? this.newVariance / (this.valueCount - 1) : 0.0);
   }
 
-  //What is the standard deviation of the items?s
+  // What is the standard deviation of the items?s
   standardDeviation() {
     return Math.sqrt(this.variance());
   }
 
-  // Get the minimum value
+  //  Get the minimum value
   min() {
     return this.currentMin;
   }
 
-  // Get the maximum value
+  //  Get the maximum value
   max() {
     return this.currentMax;
   }
