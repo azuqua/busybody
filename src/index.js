@@ -2,13 +2,14 @@ import url from 'url';
 import path from 'path';
 import assert from 'assert';
 import onFinished from 'on-finished';
-import SDStream from 'standard-deviation-stream';
 import createDebug from 'debug';
 import round from 'lodash/round';
 import map from 'lodash/map';
 import head from 'lodash/head';
 import mixin from 'merge-descriptors';
 import { EventEmitter } from 'events';
+
+import SDStream from './sd-stream';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const ID = /^\d+$/;
