@@ -56,6 +56,7 @@ app.listen(8080, () => console.log('Server listening'));
 Creates a new tracker. Takes in the following options.
  * `step=21600000` - Time between steps in milliseconds. Defaults to 6 hours.
  * `window = 4` - Maximum steps to store.
+ * `maxSize = 500` - Maximum unique paths to store per step, after path sanitization.
  * `precision = 2` - Maximum decimals to round to.
  * `preFilter(req, res) -> boolean` - Custom function to filter tracked requests before they're handled.
  * `postFilter(err, req, res) -> boolean` - Custom function to filter tracked requests after they're handled.

@@ -18,6 +18,7 @@ const debug = createDebug('busybody');
 const defaultStep = createDebug.humanize('6 hours');
 const defaultWindow = 4;
 const defaultPrecision = 2;
+const defaultMaxSize = 500;
 const defaultPreFilter = () => true;
 const defaultPostFilter = () => true;
 const defaultSanitize = req => {
@@ -41,6 +42,7 @@ const defaultSanitize = req => {
 function busybody({
   step = defaultStep,
   window = defaultWindow,
+  maxSize = defaultMaxSize,
   precision = defaultPrecision,
   preFilter = defaultPreFilter,
   postFilter = defaultPostFilter,
@@ -49,6 +51,7 @@ function busybody({
   onExpire = null,
 } = {}) {
   assert(step >= 0, 'step must be a positive number');
+  assert(window > 0, 'window must be a positive non-zero number');
   assert(window > 0, 'window must be a positive non-zero number');
   assert(precision >= 0, 'precision must be a positive number');
   assert(typeof preFilter === 'function', 'preFilter must be a function');
@@ -66,7 +69,16 @@ function busybody({
 
   function push(key, ms) {
     intervals.forEach(interval => {
-      if (!interval.streams[key]) interval.streams[key] = new SDStream();
+      if (!interval.streams[key]) {
+        // check that our size is good before tracking any keys
+        if (interval.size >= maxSize) {
+          debug('cannot track any more keys');
+          return;
+        }
+
+        interval.streams[key] = new SDStream();
+        interval.size = interval.size + 1;
+      }
       interval.streams[key].push(ms);
     });
   }
@@ -98,7 +110,8 @@ function busybody({
   // returns the formatted stats of the oldest interval
   function getStats(sort = 'mean') {
     debug('calculating stats');
-    const { since, streams } = intervals[0];
+    const { since, streams, size } = intervals[0];
+    const closed = size === maxSize;
 
     const routes = map(streams, (stream, key) => ({
       route: key,
@@ -111,7 +124,12 @@ function busybody({
 
     // sort in-place
     routes.sort((a, b) => b[sort] - a[sort]);
-    return { since, routes };
+
+    return {
+      since,
+      closed,
+      routes,
+    };
   }
 
   // adds a new interval
@@ -120,6 +138,7 @@ function busybody({
     const newStep = {
       since: (new Date()).toISOString(),
       streams: {},
+      size: 0,
     };
 
     if (intervals.length >= window) {
